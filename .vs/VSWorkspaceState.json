@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\AuctionService",
+    "\\src\\AuctionService\\Controllers",
+    "\\src\\AuctionService\\DTOs",
+    "\\src\\AuctionService\\RequestHelper"
+  ],
+  "SelectedNode": "\\src\\AuctionService\\Controllers\\AuctionsController.cs",
+  "PreviewInSolutionExplorer": false
+}
