@@ -270,3 +270,4 @@ C:\Users\makro\OneDrive\Desktop\Carsties\src\AuctionService\obj\Debug\net9.0\ref
 C:\Users\makro\OneDrive\Desktop\Carsties\src\AuctionService\obj\Debug\net9.0\AuctionService.pdb
 C:\Users\makro\OneDrive\Desktop\Carsties\src\AuctionService\obj\Debug\net9.0\AuctionService.genruntimeconfig.cache
 C:\Users\makro\OneDrive\Desktop\Carsties\src\AuctionService\obj\Debug\net9.0\ref\AuctionService.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\AuctionService\obj\Debug\net9.0\AuctionService.sourcelink.json
