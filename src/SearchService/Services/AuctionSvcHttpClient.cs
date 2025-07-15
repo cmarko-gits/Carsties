@@ -16,14 +16,30 @@ namespace SearchService.Services
         }
 
         public async Task<List<Item>> GetItemsForSearchDb()
-        {
-            var lastUpdated = await DB.Find<Item, string>()
-                .Sort(x => x.Descending(x => x.UpdatedAt))
-                .Project(x => x.UpdatedAt.ToString())
-                .ExecuteFirstAsync();
+{
+    var lastItem = await DB.Find<Item>()
+        .Sort(x => x.Descending(x => x.UpdatedAt))
+        .ExecuteFirstAsync();
+
+    string url;
+
+    if (lastItem == null)
+    {
+        // Ako nema nijednog item-a u bazi, ne šalji date parametar
+        url = _config["AuctionServiceUrl"] + "/api/auctions";
+    }
+    else
+    {
+        var lastUpdated = lastItem.UpdatedAt.ToString("o"); // ISO format
+        url = _config["AuctionServiceUrl"] + "/api/auctions?date=" + Uri.EscapeDataString(lastUpdated);
+    }
+
+    Console.WriteLine("GET -> " + url);
+
+    return await _httpClient.GetFromJsonAsync<List<Item>>(url);
+}
 
 
-            return await _httpClient.GetFromJsonAsync<List<Item>>(_config["AuctionServiceUrl"]+"/api/auctions?date="+lastUpdated);
-        }
+
     }
 }

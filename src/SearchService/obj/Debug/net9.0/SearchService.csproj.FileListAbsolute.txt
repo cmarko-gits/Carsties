@@ -62,3 +62,9 @@ C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\Micr
 C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\Polly.dll
 C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\Polly.Extensions.Http.dll
 C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\MassTransit.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\MassTransit.Abstractions.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\MassTransit.RabbitMqTransport.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\RabbitMQ.Client.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\Contracts.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\SearchService\bin\Debug\net9.0\Contracts.pdb

@@ -3,6 +3,8 @@ using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace AuctionService.Controllers
@@ -13,10 +15,12 @@ namespace AuctionService.Controllers
     {
         private readonly AuctionDbContext _context;
         private readonly IMapper _mapper;
-        public AuctionsController(AuctionDbContext _context, IMapper mapper)
+        private readonly IPublishEndpoint _publishEndpoint;
+        public AuctionsController(AuctionDbContext _context, IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             this._context = _context;
             this._mapper = mapper;
+            this._publishEndpoint = publishEndpoint;
         }
 
         [HttpGet]
@@ -56,31 +60,44 @@ namespace AuctionService.Controllers
 
             var result = await _context.SaveChangesAsync() > 0;
 
-            if (!result) return BadRequest("Could not save changes to the db");
+            if (!result) 
+                return BadRequest("Could not save changes to the db");
 
-            return CreatedAtAction(nameof(GetAuction), new { auction.Id }, _mapper.Map<AuctionDto>(auction));
+            // Sada je auction.Id sigurno postavljen
+            var newAuction = _mapper.Map<AuctionDto>(auction);
+
+            // Pošalji događaj nakon što su podaci sačuvani
+            await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+
+            return CreatedAtAction(nameof(GetAuction), new { auction.Id }, newAuction);
+
         }
+[HttpPut("{id}")]
+public async Task<ActionResult<AuctionDto>> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
+{
+    var auction = await _context.Auctions.Include(i => i.Item).FirstOrDefaultAsync(i => i.Id == id);
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<AuctionDto>> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
-        {
-            var auction = await _context.Auctions.Include(i => i.Item).FirstOrDefaultAsync(i => i.Id == id);
+    if (auction == null) return NotFound();
 
-            if (auction == null) return NotFound();
+    // Ažuriraj polja
+    auction.Item.Make = updateAuctionDto.Make ?? auction.Item.Make;
+    auction.Item.Model = updateAuctionDto.Model ?? auction.Item.Model;
+    auction.Item.Color = updateAuctionDto.Color ?? auction.Item.Color;
+    auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
+    auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
-            auction.Item.Make = updateAuctionDto.Make ?? auction.Item.Make;
-            auction.Item.Model = updateAuctionDto.Model ?? auction.Item.Model;
-            auction.Item.Color = updateAuctionDto.Color ?? auction.Item.Color;
-            auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
-            auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
+    // 1️⃣ Prvo sačuvaj promene u bazu
+    var result = await _context.SaveChangesAsync() > 0;
 
-            var result = await _context.SaveChangesAsync() > 0;
+    if (!result) return BadRequest("Auction couldn't be updated");
 
-            if (!result) return BadRequest("Auction couldn't be updated");
+    // 2️⃣ Tek onda pošalji događaj
+    await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
 
-            var auctionDto = _mapper.Map<AuctionDto>(auction);
-            return Ok(auctionDto);
-        }
+    // Vrati izmenjeni DTO
+    var auctionDto = _mapper.Map<AuctionDto>(auction);
+    return Ok(auctionDto);
+}
 
 
         [HttpDelete("{id}")]
@@ -91,6 +108,9 @@ namespace AuctionService.Controllers
             if (auction == null) return NotFound();
 
             _context.Auctions.Remove(auction);
+
+            await _publishEndpoint.Publish<AuctionDeleted>(new { Id = auction.Id.ToString() });
+            
 
             var result = await _context.SaveChangesAsync() > 0;
 

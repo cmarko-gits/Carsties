@@ -1,0 +1,12 @@
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\bin\Debug\net9.0\Contracts.deps.json
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\bin\Debug\net9.0\Contracts.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\bin\Debug\net9.0\Contracts.pdb
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.AssemblyInfoInputs.cache
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.AssemblyInfo.cs
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.csproj.CoreCompileInputs.cache
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.sourcelink.json
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\refint\Contracts.dll
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\Contracts.pdb
+C:\Users\makro\OneDrive\Desktop\Carsties\src\Contracts\obj\Debug\net9.0\ref\Contracts.dll

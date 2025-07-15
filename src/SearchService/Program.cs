@@ -1,9 +1,11 @@
 using System.Net;
+using MassTransit;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using MongoDB.Entities;
 using Polly;
 using Polly.Extensions.Http;
+using SearchService.Consumers;
 using SearchService.Data;
 using SearchService.Model;
 using SearchService.Services;
@@ -12,7 +14,41 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Services
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetPolicy());
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Dodaj HttpClient sa timeout od 5 minuta i retry politikom
+builder.Services.AddHttpClient<AuctionSvcHttpClient>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+})
+.AddPolicyHandler(GetPolicy());
+
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
+    x.AddConsumer<AuctionUpdatedConsumer>(); // <--- OVO MORA BITI TU
+
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.ReceiveEndpoint("search-auction-created", e =>
+        {
+            e.UseMessageRetry(r => r.Interval(5, 5));
+            e.ConfigureConsumer<AuctionCreatedConsumer>(context);
+            e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
+        });
+
+        cfg.Host("localhost", "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -22,17 +58,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Swagger
+// Swagger UI u Development modu
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.Lifetime.ApplicationStarted.Register( async () =>
 
-app.UseHttpsRedirection();
-
-// ✅ Inicijalizuj bazu direktno pre pokretanja aplikacije
+{
 try
 {
     await DbInitializer.InitDb(app);
@@ -43,10 +78,14 @@ catch (Exception ex)
     Console.WriteLine(ex.ToString());
 }
 
+});
+app.UseHttpsRedirection();
+
 app.MapControllers();
 
 app.Run();
 
+// Polly retry politika - beskonačno retry sa pauzom od 3 sekunde
 static IAsyncPolicy<HttpResponseMessage> GetPolicy()
     => HttpPolicyExtensions
         .HandleTransientHttpError()
