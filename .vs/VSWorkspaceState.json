@@ -2,11 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\AuctionService",
-    "\\src\\AuctionService\\Controllers",
-    "\\src\\AuctionService\\DTOs",
-    "\\src\\AuctionService\\RequestHelper"
+    "\\src\\AuctionService\\RequestHelper",
+    "\\src\\IdentityService",
+    "\\src\\IdentityService\\Pages",
+    "\\src\\IdentityService\\Pages\\Account",
+    "\\src\\IdentityService\\Pages\\Account\\Register"
   ],
-  "SelectedNode": "\\src\\AuctionService\\Controllers\\AuctionsController.cs",
+  "SelectedNode": "\\src\\IdentityService\\Pages\\Account\\Register",
   "PreviewInSolutionExplorer": false
 }
