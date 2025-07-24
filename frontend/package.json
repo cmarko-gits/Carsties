@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "flowbite": "^3.1.2",
+    "flowbite-react": "^0.12.2",
+    "react-countdown": "^2.3.6",
+    "react-icons": "^5.5.0"
+  }
+}

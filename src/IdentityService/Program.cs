@@ -2,6 +2,10 @@ using System.Globalization;
 using System.Text;
 using Duende.IdentityServer.Licensing;
 using IdentityService;
+using IdentityService.Data;
+using IdentityService.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -19,13 +23,60 @@ try
         .Enrich.FromLogContext()
         .ReadFrom.Configuration(ctx.Configuration));
 
-    var app = builder
-        .ConfigureServices()
-        .ConfigurePipeline();
+    // Configure EF Core and Identity
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    // this seeding is only for the template to bootstrap the DB and users.
-    // in production you will likely want a different approach.
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
+    builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+    options.Secure = CookieSecurePolicy.Always;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+    builder.Services.AddRazorPages();
+    builder.Services.AddControllers();
+
+    builder.Services.AddIdentityServer()
+        .AddInMemoryClients(Config.Clients)
+        .AddInMemoryIdentityResources(Config.IdentityResources)
+        .AddInMemoryApiScopes(Config.ApiScopes)
+        .AddAspNetIdentity<ApplicationUser>()
+        .AddDeveloperSigningCredential();
+
+    var app = builder.Build();
+
+    // Seed data (dev only)
     SeedData.EnsureSeedData(app);
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+    else
+    {
+        app.UseExceptionHandler("/Error");
+        app.UseHsts();
+    }
+
+    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+
+    app.UseRouting();
+
+    app.UseIdentityServer();
+    app.UseAuthorization();
+
+    app.MapRazorPages();
+    app.MapControllers();
+    app.MapFallbackToPage("/Index");
 
     if (app.Environment.IsDevelopment())
     {

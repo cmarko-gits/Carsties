@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   postgres:
     image: postgres
@@ -7,6 +9,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mongodb:
     image: mongo
@@ -17,11 +24,85 @@ services:
       - "27017:27017"
     volumes:
       - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "127.0.0.1/test", "--eval", "quit(db.runCommand({ping: 1}).ok ? 0 : 2)"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: "rabbitmq-diagnostics check_port_connectivity"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  auction-svc:
+    build:
+      context: .
+      dockerfile: src/AuctionService/Dockerfile
+    image: trycatchlearn/auction-svc:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - RabbitMq=host=rabbitmq
+      - ConnectionStrings__DefaultConnection=Server=postgres;Port=5432;Username=postgres;Password=postgrespw;Database=auctions
+      - IdentityServiceUrl=http://identity-svc
+    ports:
+      - "7001:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  search-svc:
+    build:
+      context: .
+      dockerfile: src/SearchService/Dockerfile
+    image: trycatchlearn/search-svc:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - RabbitMq=host=rabbitmq
+      - ConnectionStrings__MongoDbConnection=mongodb://root:mongopw@mongodb
+      - AuctionServiceUrl=http://auction-svc
+    ports:
+      - "7002:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  identity-svc:
+    build:
+      context: .
+      dockerfile: src/IdentityService/Dockerfile
+    image: trycatchlearn/identity-svc:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - RabbitMq=host=rabbitmq
+      - ConnectionStrings__DefaultConnection=Server=postgres;Port=5432;User Id=postgres;Password=postgrespw;Database=identity
+    ports:
+      - "5001:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  gateway-svc:
+    build:
+      context: .
+      dockerfile: src/GatewayService/Dockerfile
+    image: trycatchlearn/gateway-svc:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "6001:80"
 
 volumes:
   pgdata:
